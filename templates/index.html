@@ -3,543 +3,493 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 开发助手</title>
-    
-    <!-- Markdown 渲染 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
-    
-    <!-- 代码高亮 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js"></script>
-    
+    <title>增强版 AI 助手</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            color: #e0e0e0;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
-        
-        /* 头部 */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
         .header {
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
         .header h1 {
-            font-size: 1.3rem;
-            color: #fff;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        
-        .header-controls {
+        .toolbar {
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
-        
-        .model-select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-        
-        .model-select option {
-            background: #1a1a2e;
-            color: #fff;
-        }
-        
-        .btn-clear {
-            padding: 8px 16px;
-            border-radius: 8px;
+        .model-select, .project-input {
+            padding: 8px 15px;
             border: none;
-            background: rgba(255, 87, 87, 0.2);
-            color: #ff5757;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            color: white;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            font-size: 14px;
         }
-        
-        .btn-clear:hover {
-            background: rgba(255, 87, 87, 0.3);
+        .model-select option {
+            background: #764ba2;
         }
-        
-        /* 聊天区域 */
-        .chat-container {
+        .project-input {
+            width: 300px;
+            cursor: text;
+        }
+        .project-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        .set-path-btn, .clear-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .set-path-btn:hover, .clear-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .workspace-info {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .chat-area {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            scroll-behavior: smooth;
+            background: #f5f5f5;
         }
-        
         .message {
             margin-bottom: 20px;
-            animation: fadeIn 0.3s ease;
+            animation: slideIn 0.3s ease;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
-        .message-user {
+        .message.user {
             display: flex;
             justify-content: flex-end;
         }
-        
-        .message-assistant {
+        .message.assistant {
             display: flex;
             justify-content: flex-start;
         }
-        
         .message-content {
             max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 16px;
+            padding: 15px 20px;
+            border-radius: 15px;
             line-height: 1.6;
         }
-        
-        .message-user .message-content {
+        .message.user .message-content {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            border-bottom-right-radius: 4px;
+            color: white;
         }
-        
-        .message-assistant .message-content {
-            background: rgba(255, 255, 255, 0.1);
-            border-bottom-left-radius: 4px;
+        .message.assistant .message-content {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #333;
         }
-        
-        /* Markdown 样式 */
-        .message-content h1, 
-        .message-content h2, 
-        .message-content h3,
-        .message-content h4 {
-            margin: 16px 0 8px 0;
-            color: #fff;
-        }
-        
-        .message-content h1 { font-size: 1.5em; }
-        .message-content h2 { font-size: 1.3em; }
-        .message-content h3 { font-size: 1.1em; }
-        
-        .message-content p {
-            margin: 8px 0;
-        }
-        
-        .message-content ul, .message-content ol {
-            margin: 8px 0;
-            padding-left: 20px;
-        }
-        
-        .message-content li {
-            margin: 4px 0;
-        }
-        
-        .message-content code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-            font-size: 0.9em;
-        }
-        
         .message-content pre {
-            background: #0d1117;
-            padding: 16px;
+            background: #2d2d2d;
+            padding: 15px;
             border-radius: 8px;
             overflow-x: auto;
-            margin: 12px 0;
-            position: relative;
+            margin: 10px 0;
         }
-        
-        .message-content pre code {
-            background: none;
-            padding: 0;
-            font-size: 0.85em;
-            line-height: 1.5;
-            color: #e6edf3;
+        .message-content code {
+            font-family: 'Courier New', monospace;
         }
-        
-        .message-content blockquote {
-            border-left: 4px solid #667eea;
-            padding-left: 16px;
-            margin: 12px 0;
-            color: #a0a0a0;
+        .message-content p {
+            margin: 10px 0;
         }
-        
-        .message-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 12px 0;
+        .tool-result {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
         }
-        
-        .message-content th, .message-content td {
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 12px;
-            text-align: left;
-        }
-        
-        .message-content th {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .message-content a {
-            color: #667eea;
-            text-decoration: none;
-        }
-        
-        .message-content a:hover {
-            text-decoration: underline;
-        }
-        
-        .message-content hr {
-            border: none;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            margin: 16px 0;
-        }
-        
-        /* 输入区域 */
-        .input-container {
+        .input-area {
             padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .input-wrapper {
+            background: white;
+            border-top: 1px solid #e0e0e0;
             display: flex;
             gap: 10px;
-            align-items: flex-end;
         }
-        
-        .input-box {
+        .input-area textarea {
             flex: 1;
-            position: relative;
-        }
-        
-        #messageInput {
-            width: 100%;
-            padding: 14px 16px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            font-size: 1rem;
             resize: none;
-            min-height: 50px;
-            max-height: 150px;
-            outline: none;
-            transition: all 0.2s;
             font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
         }
-        
-        #messageInput:focus {
+        .input-area textarea:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
-        
-        #messageInput::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-        
-        .btn-send {
-            padding: 14px 24px;
-            border-radius: 12px;
-            border: none;
+        .send-btn, .stop-btn {
+            padding: 15px 30px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            font-size: 1rem;
+            color: white;
+            border: none;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            min-width: 100px;
         }
-        
-        .btn-send:hover {
+        .stop-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        .send-btn:hover, .stop-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
-        
-        .btn-send:disabled {
+        .send-btn:active, .stop-btn:active {
+            transform: translateY(0);
+        }
+        .send-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
-        
-        /* 加载动画 */
-        .typing-indicator {
+        .quick-actions {
+            padding: 10px 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #e0e0e0;
             display: flex;
-            gap: 4px;
-            padding: 12px 16px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
-        
-        .typing-indicator span {
-            width: 8px;
-            height: 8px;
-            background: #667eea;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out;
-        }
-        
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-        
-        /* 欢迎信息 */
-        .welcome {
-            text-align: center;
-            padding: 60px 20px;
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .welcome h2 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-        
-        .welcome p {
-            font-size: 1rem;
-        }
-        
-        /* 复制按钮 */
-        .copy-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            padding: 4px 10px;
-            border-radius: 4px;
-            border: none;
-            background: rgba(255, 255, 255, 0.15);
-            color: #a0a0a0;
-            font-size: 0.75rem;
+        .quick-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
             cursor: pointer;
-            opacity: 0;
+            font-size: 12px;
             transition: all 0.2s;
         }
-        
-        pre:hover .copy-btn {
-            opacity: 1;
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
         }
-        
-        .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            color: #fff;
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            width: fit-content;
         }
-        
-        .copy-btn.copied {
-            background: rgba(102, 234, 130, 0.3);
-            color: #66ea82;
+        .typing-indicator.active {
+            display: block;
         }
-        
-        /* 滚动条 */
-        ::-webkit-scrollbar {
+        .typing-indicator span {
+            display: inline-block;
             width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
         }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
         }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
         }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
         }
-        
-        /* 错误消息 */
-        .error-message {
-            color: #ff5757;
-            background: rgba(255, 87, 87, 0.1);
-            border: 1px solid rgba(255, 87, 87, 0.3);
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin: 8px 0;
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .notification.success {
+            border-left: 4px solid #4caf50;
+        }
+        .notification.error {
+            border-left: 4px solid #f44336;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 头部 -->
         <div class="header">
-            <h1>🤖 AI 聊天助手</h1>
-            <div class="header-controls">
-                <select id="modelSelect" class="model-select">
+            <div>
+                <h1>🤖 增强版 AI 助手</h1>
+                <div class="workspace-info" id="workspaceInfo">📁 项目路径: {{ default_work_dir }}</div>
+            </div>
+            <div class="toolbar">
+                <input type="text" class="project-input" id="projectPath" placeholder="输入项目路径 (如: ~/work/myproject)">
+                <button class="set-path-btn" onclick="setProjectPath()">📁 设置路径</button>
+                <select class="model-select" id="modelSelect">
                     {% for key, value in models.items() %}
                     <option value="{{ key }}">{{ key }}</option>
                     {% endfor %}
                 </select>
-                <button class="btn-clear" onclick="clearChat()">🗑️ 清除</button>
+                <button class="clear-btn" onclick="clearChat()">🗑️ 清空对话</button>
             </div>
         </div>
         
-        <!-- 聊天区域 -->
-        <div class="chat-container" id="chatContainer">
-            <div class="welcome">
-                <h2>👋 你好！</h2>
-                <p>选择一个模型，开始对话吧</p>
-            </div>
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="quickAction('现在是几点？今天星期几？')">⏰ 当前时间</button>
+            <button class="quick-btn" onclick="quickAction('列出当前项目的所有文件')">📂 列出文件</button>
+            <button class="quick-btn" onclick="quickAction('搜索最新的 Python 3.12 新特性')">🔍 搜索网络</button>
+            <button class="quick-btn" onclick="quickAction('创建一个 hello.py 文件，内容是打印 Hello World')">📝 创建文件</button>
+            <button class="quick-btn" onclick="quickAction('帮我查看项目中的 Python 文件')">👀 查看代码</button>
+            <button class="quick-btn" onclick="quickAction('运行项目中的 test.py')">▶️ 运行代码</button>
         </div>
         
-        <!-- 输入区域 -->
-        <div class="input-container">
-            <div class="input-wrapper">
-                <div class="input-box">
-                    <textarea 
-                        id="messageInput" 
-                        placeholder="输入消息... (Shift+Enter 换行, Enter 发送)"
-                        rows="1"
-                    ></textarea>
+        <div class="chat-area" id="chatArea">
+            <div class="message assistant">
+                <div class="message-content">
+                    <p>👋 你好！我是增强版 AI 助手，我可以帮你：</p>
+                    <ul>
+                        <li>⏰ <strong>获取时间</strong> - 准确的日期和星期</li>
+                        <li>🌐 <strong>联网搜索</strong> - 获取最新信息</li>
+                        <li>📁 <strong>文件操作</strong> - 读写、列出文件</li>
+                        <li>💻 <strong>执行命令</strong> - 编译、运行代码</li>
+                        <li>🐛 <strong>调试代码</strong> - 帮你找出问题</li>
+                        <li>🔧 <strong>修改代码</strong> - 优化和改进</li>
+                    </ul>
+                    <p>💡 <strong>新功能：</strong></p>
+                    <ul>
+                        <li>🎯 设置项目路径，AI 可以访问和修改项目中的文件</li>
+                        <li>⏹️ 点击"停止"按钮可以随时中断 AI 的回复</li>
+                    </ul>
+                    <p>试试问我："现在几点了？" 或 "列出项目文件"</p>
                 </div>
-                <button class="btn-send" id="sendBtn" onclick="sendMessage()">
-                    发送 ✨
-                </button>
             </div>
+        </div>
+        
+        <div class="input-area">
+            <textarea id="messageInput" placeholder="输入消息... (支持 Shift+Enter 换行)" rows="3"></textarea>
+            <button class="send-btn" id="actionBtn" onclick="handleAction()">发送</button>
         </div>
     </div>
 
     <script>
-        // 等待 highlight.js 加载完成
-        function waitForHljs() {
-            return new Promise((resolve) => {
-                if (typeof hljs !== 'undefined') {
-                    resolve();
-                } else {
-                    const check = setInterval(() => {
-                        if (typeof hljs !== 'undefined') {
-                            clearInterval(check);
-                            resolve();
-                        }
-                    }, 100);
-                }
-            });
-        }
+        const chatArea = document.getElementById('chatArea');
+        const messageInput = document.getElementById('messageInput');
+        const actionBtn = document.getElementById('actionBtn');
+        const modelSelect = document.getElementById('modelSelect');
+        const projectPath = document.getElementById('projectPath');
+        const workspaceInfo = document.getElementById('workspaceInfo');
         
-        // 安全的代码高亮函数
-        function highlightCode(container) {
-            if (typeof hljs !== 'undefined') {
-                const codeBlocks = container.querySelectorAll('pre code');
-                codeBlocks.forEach((block) => {
-                    try {
-                        hljs.highlightElement(block);
-                    } catch (e) {
-                        console.warn('代码高亮失败:', e);
-                    }
+        let sessionId = 'session_' + Date.now();
+        let isProcessing = false;
+        let currentProjectPath = '{{ default_work_dir }}';
+
+        // 配置 marked
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true
+        });
+
+        // 加载当前项目路径
+        async function loadProjectPath() {
+            try {
+                const response = await fetch('/api/project/get', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ session_id: sessionId })
                 });
+                const data = await response.json();
+                currentProjectPath = data.project_path;
+                projectPath.value = currentProjectPath;
+                workspaceInfo.textContent = `📁 项目路径: ${currentProjectPath}`;
+            } catch (error) {
+                console.error('加载项目路径失败:', error);
             }
         }
-        
-        // 配置 marked
-        document.addEventListener('DOMContentLoaded', async function() {
-            await waitForHljs();
+
+        // 设置项目路径
+        async function setProjectPath() {
+            const path = projectPath.value.trim();
+            if (!path) {
+                showNotification('请输入项目路径', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/project/set', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        project_path: path
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentProjectPath = data.project_path;
+                    workspaceInfo.textContent = `📁 项目路径: ${currentProjectPath}`;
+                    showNotification(`项目路径已设置: ${currentProjectPath}`, 'success');
+                    
+                    // 清空对话历史，重新初始化
+                    await clearChat(true);
+                } else {
+                    showNotification(data.error, 'error');
+                }
+            } catch (error) {
+                showNotification('设置项目路径失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
             
-            marked.setOptions({
-                highlight: function(code, lang) {
-                    if (typeof hljs !== 'undefined') {
-                        if (lang && hljs.getLanguage(lang)) {
-                            try {
-                                return hljs.highlight(code, { language: lang }).value;
-                            } catch (e) {
-                                console.warn('高亮失败:', e);
-                            }
-                        }
-                        try {
-                            return hljs.highlightAuto(code).value;
-                        } catch (e) {
-                            console.warn('自动高亮失败:', e);
-                        }
-                    }
-                    return code;
-                },
-                breaks: true,
-                gfm: true
-            });
-            
-            console.log('✅ Marked 和 Highlight.js 初始化完成');
-        });
-        
-        const chatContainer = document.getElementById('chatContainer');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const modelSelect = document.getElementById('modelSelect');
-        
-        let isWelcomeVisible = true;
-        const sessionId = 'session_' + Date.now();
-        
-        // 自动调整输入框高度
-        messageInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-        });
-        
-        // 键盘事件
-        messageInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // 处理按钮点击
+        function handleAction() {
+            if (isProcessing) {
+                stopGeneration();
+            } else {
                 sendMessage();
             }
-        });
-        
+        }
+
+        // 停止生成
+        async function stopGeneration() {
+            try {
+                await fetch('/api/chat/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+            } catch (error) {
+                console.error('停止失败:', error);
+            }
+        }
+
         // 发送消息
         async function sendMessage() {
+            if (isProcessing) return;
+            
             const message = messageInput.value.trim();
             if (!message) return;
             
-            // 清除欢迎信息
-            if (isWelcomeVisible) {
-                chatContainer.innerHTML = '';
-                isWelcomeVisible = false;
-            }
+            isProcessing = true;
+            actionBtn.textContent = '⏹️ 停止';
+            actionBtn.className = 'stop-btn';
             
             // 显示用户消息
-            addMessage(message, 'user');
+            addMessage('user', message);
             messageInput.value = '';
-            messageInput.style.height = 'auto';
             
-            // 禁用发送按钮
-            sendBtn.disabled = true;
-            sendBtn.textContent = '发送中...';
+            // 显示输入指示器
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'message assistant';
+            typingIndicator.innerHTML = '<div class="typing-indicator active"><span></span><span></span><span></span></div>';
+            chatArea.appendChild(typingIndicator);
+            scrollToBottom();
             
-            // 显示加载动画
-            const loadingId = showLoading();
+            // 创建助手消息容器
+            const assistantMsg = document.createElement('div');
+            assistantMsg.className = 'message assistant';
+            assistantMsg.innerHTML = '<div class="message-content"></div>';
             
             try {
-                // 流式请求
                 const response = await fetch('/api/chat/stream', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         message: message,
                         model: modelSelect.value,
@@ -547,28 +497,15 @@
                     })
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+                typingIndicator.remove();
+                chatArea.appendChild(assistantMsg);
                 
-                // 移除加载动画
-                removeLoading(loadingId);
-                
-                // 创建助手消息容器
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message message-assistant';
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'message-content';
-                messageDiv.appendChild(contentDiv);
-                chatContainer.appendChild(messageDiv);
-                
-                // 读取流式响应
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let fullContent = '';
                 
                 while (true) {
-                    const { done, value } = await reader.read();
+                    const { value, done } = await reader.read();
                     if (done) break;
                     
                     const chunk = decoder.decode(value);
@@ -576,193 +513,100 @@
                     
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(line.slice(6));
-                                if (data.content) {
-                                    fullContent += data.content;
-                                    contentDiv.innerHTML = renderMarkdown(fullContent);
-                                    scrollToBottom();
-                                }
-                                if (data.error) {
-                                    contentDiv.innerHTML = `<div class="error-message">❌ 错误: ${escapeHtml(data.error)}</div>`;
-                                }
-                            } catch (e) {
-                                // 忽略解析错误
+                            const data = JSON.parse(line.slice(6));
+                            
+                            if (data.content) {
+                                fullContent += data.content;
+                                const contentDiv = assistantMsg.querySelector('.message-content');
+                                contentDiv.innerHTML = marked.parse(fullContent);
+                                scrollToBottom();
+                            }
+                            
+                            if (data.error) {
+                                fullContent += `\n\n❌ 错误: ${data.error}`;
+                                assistantMsg.querySelector('.message-content').innerHTML = marked.parse(fullContent);
+                            }
+                            
+                            if (data.done) {
+                                break;
                             }
                         }
                     }
                 }
-                
-                // 最终渲染
-                contentDiv.innerHTML = renderMarkdown(fullContent);
-                addCopyButtons(contentDiv);
-                highlightCode(contentDiv);
-                
             } catch (error) {
-                removeLoading(loadingId);
-                addErrorMessage(`请求失败: ${error.message}`);
+                typingIndicator.remove();
+                addMessage('assistant', `❌ 发生错误: ${error.message}`);
+            } finally {
+                isProcessing = false;
+                actionBtn.textContent = '发送';
+                actionBtn.className = 'send-btn';
+                messageInput.focus();
             }
-            
-            sendBtn.disabled = false;
-            sendBtn.textContent = '发送 ✨';
-            scrollToBottom();
         }
-        
+
         // 添加消息
-        function addMessage(content, role) {
+        function addMessage(role, content) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message message-${role}`;
+            messageDiv.className = `message ${role}`;
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
             
-            if (role === 'user') {
-                contentDiv.textContent = content;
+            if (role === 'assistant') {
+                contentDiv.innerHTML = marked.parse(content);
             } else {
-                contentDiv.innerHTML = renderMarkdown(content);
-                addCopyButtons(contentDiv);
-                highlightCode(contentDiv);
+                contentDiv.textContent = content;
             }
             
             messageDiv.appendChild(contentDiv);
-            chatContainer.appendChild(messageDiv);
+            chatArea.appendChild(messageDiv);
             scrollToBottom();
         }
-        
-        // 添加错误消息
-        function addErrorMessage(error) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message message-assistant';
-            messageDiv.innerHTML = `
-                <div class="message-content">
-                    <div class="error-message">❌ ${escapeHtml(error)}</div>
-                </div>
-            `;
-            chatContainer.appendChild(messageDiv);
-            scrollToBottom();
-        }
-        
-        // HTML 转义
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // 渲染 Markdown
-        function renderMarkdown(content) {
-            try {
-                return marked.parse(content);
-            } catch (e) {
-                console.warn('Markdown 渲染失败:', e);
-                return escapeHtml(content).replace(/\n/g, '<br>');
-            }
-        }
-        
-        // 添加复制按钮
-        function addCopyButtons(container) {
-            const codeBlocks = container.querySelectorAll('pre');
-            codeBlocks.forEach(pre => {
-                // 确保 pre 有 position relative
-                pre.style.position = 'relative';
-                
-                // 检查是否已有复制按钮
-                if (pre.querySelector('.copy-btn')) return;
-                
-                const btn = document.createElement('button');
-                btn.className = 'copy-btn';
-                btn.textContent = '复制';
-                btn.onclick = async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const code = pre.querySelector('code');
-                    const text = code ? code.textContent : pre.textContent;
-                    
-                    try {
-                        await navigator.clipboard.writeText(text);
-                        btn.textContent = '已复制!';
-                        btn.classList.add('copied');
-                        setTimeout(() => {
-                            btn.textContent = '复制';
-                            btn.classList.remove('copied');
-                        }, 2000);
-                    } catch (err) {
-                        // 降级方案
-                        const textarea = document.createElement('textarea');
-                        textarea.value = text;
-                        document.body.appendChild(textarea);
-                        textarea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textarea);
-                        btn.textContent = '已复制!';
-                        btn.classList.add('copied');
-                        setTimeout(() => {
-                            btn.textContent = '复制';
-                            btn.classList.remove('copied');
-                        }, 2000);
-                    }
-                };
-                pre.appendChild(btn);
-            });
-        }
-        
-        // 显示加载动画
-        function showLoading() {
-            const id = 'loading_' + Date.now();
-            const loadingDiv = document.createElement('div');
-            loadingDiv.id = id;
-            loadingDiv.className = 'message message-assistant';
-            loadingDiv.innerHTML = `
-                <div class="message-content">
-                    <div class="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                </div>
-            `;
-            chatContainer.appendChild(loadingDiv);
-            scrollToBottom();
-            return id;
-        }
-        
-        // 移除加载动画
-        function removeLoading(id) {
-            const loading = document.getElementById(id);
-            if (loading) loading.remove();
-        }
-        
+
         // 滚动到底部
         function scrollToBottom() {
-            requestAnimationFrame(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            });
+            chatArea.scrollTop = chatArea.scrollHeight;
         }
-        
-        // 清除聊天
-        async function clearChat() {
-            try {
-                await fetch('/api/clear', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: sessionId })
-                });
-            } catch (e) {
-                console.warn('清除请求失败:', e);
-            }
+
+        // 清空对话
+        async function clearChat(silent = false) {
+            if (!silent && !confirm('确定要清空对话历史吗？')) return;
             
-            chatContainer.innerHTML = `
-                <div class="welcome">
-                    <h2>👋 你好！</h2>
-                    <p>选择一个模型，开始对话吧</p>
-                </div>
-            `;
-            isWelcomeVisible = true;
+            await fetch('/api/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    session_id: sessionId
+                })
+            });
+            
+            chatArea.innerHTML = '';
+            if (!silent) {
+                addMessage('assistant', '✅ 对话已清空');
+            }
         }
-        
-        // 聚焦输入框
-        messageInput.focus();
+
+        // 快捷操作
+        function quickAction(text) {
+            messageInput.value = text;
+            sendMessage();
+        }
+
+        // 键盘事件
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 页面加载完成
+        window.onload = () => {
+            loadProjectPath();
+            messageInput.focus();
+        };
     </script>
 </body>
 </html>

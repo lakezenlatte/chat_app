@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>增强版 AI 助手</title>
+    <title>我就不搭理你怎么了</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <style>
         * {
             margin: 0;
@@ -94,7 +94,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            background: #f5f5f5;
+            background: #fff9e6;  /* 米黄色背景 */
         }
         .message {
             margin-bottom: 20px;
@@ -133,17 +133,76 @@
             border: 1px solid #e0e0e0;
             color: #333;
         }
+        /* Markdown 代码块样式 - 米黄色 */
         .message-content pre {
-            background: #2d2d2d;
+            background: #fef5dc !important;  /* 米黄色代码块背景 */
             padding: 15px;
             border-radius: 8px;
             overflow-x: auto;
             margin: 10px 0;
+            border: 1px solid #e6d7a3;
+        }
+        .message-content pre code {
+            background: transparent !important;
+            color: #333 !important;
+            font-family: 'Courier New', Consolas, Monaco, monospace;
         }
         .message-content code {
-            font-family: 'Courier New', monospace;
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            background: #fef5dc;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            color: #333;
+        }
+        /* 覆盖 highlight.js 的颜色 */
+        .hljs {
+            background: #fef5dc !important;
+            color: #333 !important;
+        }
+        .hljs-keyword, .hljs-selector-tag, .hljs-built_in {
+            color: #0066cc !important;
+        }
+        .hljs-string, .hljs-title {
+            color: #006600 !important;
+        }
+        .hljs-comment {
+            color: #888 !important;
+        }
+        .hljs-number, .hljs-literal {
+            color: #cc6600 !important;
         }
         .message-content p {
+            margin: 10px 0;
+        }
+        .message-content ul, .message-content ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        .message-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin: 10px 0;
+            color: #666;
+        }
+        .message-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .message-content table th,
+        .message-content table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .message-content table th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        .message-content img {
+            max-width: 100%;
+            border-radius: 8px;
             margin: 10px 0;
         }
         .tool-result {
@@ -159,10 +218,13 @@
             padding: 20px;
             background: white;
             border-top: 1px solid #e0e0e0;
+        }
+        .input-controls {
             display: flex;
             gap: 10px;
+            margin-bottom: 10px;
         }
-        .input-area textarea {
+        .input-controls textarea {
             flex: 1;
             padding: 15px;
             border: 2px solid #e0e0e0;
@@ -173,8 +235,13 @@
             outline: none;
             transition: border-color 0.3s;
         }
-        .input-area textarea:focus {
+        .input-controls textarea:focus {
             border-color: #667eea;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
         .send-btn, .stop-btn {
             padding: 15px 30px;
@@ -200,6 +267,56 @@
         .send-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+        }
+        .file-btn {
+            padding: 8px 15px;
+            background: #f5f5f5;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .file-btn:hover {
+            background: #eeeeee;
+            border-color: #667eea;
+        }
+        .image-preview-area {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .image-preview {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-preview .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255,0,0,0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .quick-actions {
             padding: 10px 20px;
@@ -284,13 +401,22 @@
         .notification.error {
             border-left: 4px solid #f44336;
         }
+        
+        /* 用户消息中的图片 */
+        .user-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>🤖 增强版 AI 助手</h1>
+                <h1>🤖 我就不搭理你怎么了</h1>
                 <div class="workspace-info" id="workspaceInfo">📁 项目路径: {{ default_work_dir }}</div>
             </div>
             <div class="toolbar">
@@ -325,20 +451,30 @@
                         <li>💻 <strong>执行命令</strong> - 编译、运行代码</li>
                         <li>🐛 <strong>调试代码</strong> - 帮你找出问题</li>
                         <li>🔧 <strong>修改代码</strong> - 优化和改进</li>
+                        <li>📸 <strong>图片识别</strong> - 分析截图和图片</li>
                     </ul>
                     <p>💡 <strong>新功能：</strong></p>
                     <ul>
                         <li>🎯 设置项目路径，AI 可以访问和修改项目中的文件</li>
                         <li>⏹️ 点击"停止"按钮可以随时中断 AI 的回复</li>
+                        <li>📷 支持粘贴或上传图片（截图、代码、错误信息等）</li>
+                        <li>📝 完整的 Markdown 支持，代码高亮显示</li>
                     </ul>
-                    <p>试试问我："现在几点了？" 或 "列出项目文件"</p>
+                    <p>试试问我："现在几点了？" 或 "列出项目文件" 或 "截图发给我分析"</p>
                 </div>
             </div>
         </div>
         
         <div class="input-area">
-            <textarea id="messageInput" placeholder="输入消息... (支持 Shift+Enter 换行)" rows="3"></textarea>
-            <button class="send-btn" id="actionBtn" onclick="handleAction()">发送</button>
+            <div class="image-preview-area" id="imagePreviewArea"></div>
+            <div class="input-controls">
+                <textarea id="messageInput" placeholder="输入消息... (支持 Shift+Enter 换行，Ctrl+V 粘贴图片)" rows="3"></textarea>
+                <div class="button-group">
+                    <button class="send-btn" id="actionBtn" onclick="handleAction()">发送</button>
+                    <label class="file-btn" for="fileInput">📎 上传图片</label>
+                    <input type="file" id="fileInput" accept="image/*" multiple style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -349,10 +485,12 @@
         const modelSelect = document.getElementById('modelSelect');
         const projectPath = document.getElementById('projectPath');
         const workspaceInfo = document.getElementById('workspaceInfo');
+        const imagePreviewArea = document.getElementById('imagePreviewArea');
         
         let sessionId = 'session_' + Date.now();
         let isProcessing = false;
         let currentProjectPath = '{{ default_work_dir }}';
+        let uploadedImages = [];  // 存储上传的图片
 
         // 配置 marked
         marked.setOptions({
@@ -362,7 +500,8 @@
                 }
                 return hljs.highlightAuto(code).value;
             },
-            breaks: true
+            breaks: true,
+            gfm: true
         });
 
         // 加载当前项目路径
@@ -410,8 +549,6 @@
                     currentProjectPath = data.project_path;
                     workspaceInfo.textContent = `📁 项目路径: ${currentProjectPath}`;
                     showNotification(`项目路径已设置: ${currentProjectPath}`, 'success');
-                    
-                    // 清空对话历史，重新初始化
                     await clearChat(true);
                 } else {
                     showNotification(data.error, 'error');
@@ -420,6 +557,71 @@
                 showNotification('设置项目路径失败: ' + error.message, 'error');
             }
         }
+
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            for (let file of files) {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        addImagePreview(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            event.target.value = '';  // 清空 input，允许重复选择同一文件
+        }
+
+        // 添加图片预览
+        function addImagePreview(dataUrl) {
+            uploadedImages.push(dataUrl);
+            
+            const preview = document.createElement('div');
+            preview.className = 'image-preview';
+            preview.innerHTML = `
+                <img src="${dataUrl}" alt="预览">
+                <button class="remove-btn" onclick="removeImage(${uploadedImages.length - 1})">×</button>
+            `;
+            
+            imagePreviewArea.appendChild(preview);
+        }
+
+        // 删除图片
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            updateImagePreviews();
+        }
+
+        // 更新图片预览
+        function updateImagePreviews() {
+            imagePreviewArea.innerHTML = '';
+            uploadedImages.forEach((dataUrl, index) => {
+                const preview = document.createElement('div');
+                preview.className = 'image-preview';
+                preview.innerHTML = `
+                    <img src="${dataUrl}" alt="预览">
+                    <button class="remove-btn" onclick="removeImage(${index})">×</button>
+                `;
+                imagePreviewArea.appendChild(preview);
+            });
+        }
+
+        // 处理粘贴事件
+        messageInput.addEventListener('paste', function(e) {
+            const items = e.clipboardData.items;
+            for (let item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        addImagePreview(event.target.result);
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            }
+        });
 
         // 显示通知
         function showNotification(message, type = 'success') {
@@ -462,15 +664,20 @@
             if (isProcessing) return;
             
             const message = messageInput.value.trim();
-            if (!message) return;
+            if (!message && uploadedImages.length === 0) return;
             
             isProcessing = true;
             actionBtn.textContent = '⏹️ 停止';
             actionBtn.className = 'stop-btn';
             
             // 显示用户消息
-            addMessage('user', message);
+            addMessage('user', message, uploadedImages.slice());
             messageInput.value = '';
+            
+            // 清空图片
+            const imagesToSend = uploadedImages.slice();
+            uploadedImages = [];
+            updateImagePreviews();
             
             // 显示输入指示器
             const typingIndicator = document.createElement('div');
@@ -493,7 +700,8 @@
                     body: JSON.stringify({
                         message: message,
                         model: modelSelect.value,
-                        session_id: sessionId
+                        session_id: sessionId,
+                        images: imagesToSend
                     })
                 });
                 
@@ -545,7 +753,7 @@
         }
 
         // 添加消息
-        function addMessage(role, content) {
+        function addMessage(role, content, images = []) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}`;
             
@@ -556,6 +764,16 @@
                 contentDiv.innerHTML = marked.parse(content);
             } else {
                 contentDiv.textContent = content;
+                
+                // 添加用户上传的图片
+                if (images && images.length > 0) {
+                    images.forEach(imgData => {
+                        const img = document.createElement('img');
+                        img.src = imgData;
+                        img.className = 'user-image';
+                        contentDiv.appendChild(img);
+                    });
+                }
             }
             
             messageDiv.appendChild(contentDiv);

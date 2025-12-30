@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 增强版 AI 助手
-支持：联网搜索、文件操作、代码编译运行、Markdown 渲染
+支持：联网搜索、文件操作、代码编译运行、Markdown 渲染、图片上传
 """
 
 from flask import Flask, render_template, request, Response, jsonify, stream_with_context
@@ -13,8 +13,10 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 import threading
+import base64
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # ============================================
 # 配置
@@ -316,11 +318,12 @@ def get_project_path():
 
 @app.route('/api/chat/stream', methods=['POST'])
 def chat_stream():
-    """流式聊天（支持工具调用和取消）"""
+    """流式聊天（支持工具调用、图片和取消）"""
     data = request.json
     message = data.get('message', '')
     model_key = data.get('model', 'claude-4-sonnet')
     session_id = data.get('session_id', 'default')
+    images = data.get('images', [])  # 图片数据（base64）
     
     model = MODELS.get(model_key, model_key)
     
@@ -351,21 +354,42 @@ def chat_stream():
 当需要使用工具时，请以以下格式返回：
 <tool>{{"name": "tool_name", "parameters": {{"param1": "value1"}}}}</tool>
 
-示例：
-- 获取时间: <tool>{{"name": "get_current_time", "parameters": {{}}}}</tool>
-- 搜索: <tool>{{"name": "web_search", "parameters": {{"query": "Python 教程"}}}}</tool>
-- 读文件: <tool>{{"name": "read_file", "parameters": {{"filepath": "test.py"}}}}</tool>
-- 写文件: <tool>{{"name": "write_file", "parameters": {{"filepath": "hello.py", "content": "print('hello')"}}}}</tool>
-- 列目录: <tool>{{"name": "list_files", "parameters": {{"directory": "."}}}}</tool>
-- 运行代码: <tool>{{"name": "execute_command", "parameters": {{"command": "python3 test.py", "cwd": "."}}}}</tool>
-
 重要：当用户问时间、日期、星期几时，必须调用 get_current_time() 工具获取准确的当前时间！
+
+你还可以分析用户上传的图片，帮助识别图片内容、代码截图、错误信息等。
 
 你可以在一次回复中调用多个工具。"""
         
         history.append({"role": "system", "content": system_prompt})
     
-    history.append({"role": "user", "content": message})
+    # 构建用户消息（包含图片）
+    user_message = {"role": "user", "content": []}
+    
+    # 添加文本内容
+    if message:
+        user_message["content"].append({"type": "text", "text": message})
+    
+    # 添加图片内容
+    for img_data in images:
+        # img_data 格式: data:image/png;base64,xxxxx
+        if img_data.startswith('data:image'):
+            # 提取 MIME 类型和 base64 数据
+            parts = img_data.split(',', 1)
+            if len(parts) == 2:
+                mime_part = parts[0]  # data:image/png;base64
+                base64_data = parts[1]
+                
+                # 提取 MIME 类型
+                media_type = mime_part.split(';')[0].split(':')[1]  # image/png
+                
+                user_message["content"].append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": img_data
+                    }
+                })
+    
+    history.append(user_message)
     
     # 标记此请求为活动状态
     request_id = f"{session_id}_{len(history)}"
@@ -516,4 +540,5 @@ if __name__ == '__main__':
     print("  ✅ 获取准确时间")
     print("  ✅ 设置项目路径")
     print("  ✅ 停止生成")
+    print("  ✅ 图片上传识别")
     app.run(host='0.0.0.0', port=5000, debug=True)
